@@ -62,6 +62,12 @@ The built files will be in `client/dist/`. The server automatically serves these
 cd server && node index.js
 ```
 
+### Run Tests
+
+```sh
+cd server && npm test
+```
+
 ### Run with Docker
 
 ```sh
@@ -69,6 +75,8 @@ docker compose up --build
 ```
 
 The app will be available at `http://localhost:3001`.
+
+The Docker image is also published to GitHub Container Registry on each [release](../../releases).
 
 ## Project Structure
 
@@ -83,6 +91,7 @@ imposter-game/
 ├── server/                 # Node.js backend
 │   ├── game/               # Room, word list, room manager
 │   └── socket/             # Socket.IO event handlers
+├── .github/workflows/      # CI/CD (GitHub Actions)
 ├── Dockerfile              # Multi-stage production build
 ├── docker-compose.yml      # Docker Compose config
 ├── package.json            # Root scripts (dev, install:all)
