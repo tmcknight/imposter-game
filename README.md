@@ -76,7 +76,7 @@ docker compose up --build
 
 The app will be available at `http://localhost:3001`.
 
-The Docker image is also published to GitHub Container Registry on each [release](../../releases).
+The Docker image is also published to [GitHub Container Registry](https://ghcr.io/tmcknight/imposter-game) on each [release](../../releases).
 
 ## Project Structure
 
