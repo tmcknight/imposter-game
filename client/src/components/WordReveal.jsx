@@ -3,17 +3,11 @@ import { useGame } from '../context/GameContext.jsx';
 import { EyeIcon, ShieldExclamationIcon, CheckBadgeIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 
 export default function WordReveal() {
-  const { word, category, isImposter, isHost, advancePhase } = useGame();
+  const { word, isImposter, isHost, advancePhase } = useGame();
   const [revealed, setRevealed] = useState(false);
 
   return (
     <div className="flex flex-col items-center gap-6 flex-1 justify-center text-center animate-fade-in">
-      {revealed && category && (
-        <p className="text-sm text-text-dim uppercase tracking-widest">
-          Category: <strong className="text-text">{category}</strong>
-        </p>
-      )}
-
       {!revealed ? (
         <button
           className="btn-hover w-full py-12 px-6 text-xl bg-surface border-2 border-dashed border-text-dim/40 rounded-xl text-text-dim font-semibold cursor-pointer flex flex-col items-center justify-center gap-3 glow-surface"

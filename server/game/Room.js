@@ -9,11 +9,9 @@ export default class Room {
     this.players = [{ id: hostId, name: hostName, connected: true, avatar: hostAvatar || null }];
     this.hostId = hostId;
     this.word = null;
-    this.category = null;
     this.imposterId = null;
     this.votes = {};       // voterId -> targetId
     this.cleanupTimer = null;
-    this.hideCategory = false; // hide category from imposter
 
     // Custom words settings
     this.customWordsEnabled = false;
@@ -21,7 +19,7 @@ export default class Room {
     this.requiredWordsPerPlayer = 2;
 
     // Custom words state (per-round)
-    this.customWordPool = [];    // [{ word, category, submittedBy, submittedByName }]
+    this.customWordPool = [];    // [{ word, submittedBy, submittedByName }]
     this.wordSubmissions = {};   // playerId -> [words]
     this.wordSubmittedBy = null; // name of player who submitted the chosen word
     this.usedCustomWords = new Set(); // tracks words already used across rounds
@@ -88,9 +86,8 @@ export default class Room {
   }
 
   _pickWordAndImposter() {
-    const { word, category } = getRandomWord();
+    const { word } = getRandomWord();
     this.word = word;
-    this.category = category;
     this.wordSubmittedBy = null;
 
     const connected = this.connectedPlayers;
@@ -110,7 +107,6 @@ export default class Room {
 
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     this.word = chosen.word;
-    this.category = chosen.category || 'Custom';
     this.wordSubmittedBy = chosen.submittedByName || null;
 
     // Track this word as used
@@ -157,7 +153,6 @@ export default class Room {
     for (const word of words) {
       this.customWordPool.push({
         word: word.trim(),
-        category: 'Custom',
         submittedBy: playerId,
         submittedByName: player.name,
       });
@@ -260,7 +255,6 @@ export default class Room {
       imposterId: this.imposterId,
       imposterCaught,
       word: this.word,
-      category: this.category,
       wordSubmittedBy: this.wordSubmittedBy,
       pointsAwarded,
     };
@@ -288,7 +282,6 @@ export default class Room {
   returnToLobby() {
     this.phase = 'LOBBY';
     this.word = null;
-    this.category = null;
     this.imposterId = null;
     this.votes = {};
     this.wordSubmittedBy = null;

@@ -11,7 +11,6 @@ export default function registerHandlers(io, socket) {
         playerId: socket.id,
         players: room.getPlayerInfo(),
         hostId: room.hostId,
-        hideCategory: room.hideCategory,
         customWordsEnabled: room.customWordsEnabled,
         includeDefaultWords: room.includeDefaultWords,
         requiredWordsPerPlayer: room.requiredWordsPerPlayer,
@@ -41,7 +40,6 @@ export default function registerHandlers(io, socket) {
         playerId: socket.id,
         players: room.getPlayerInfo(),
         hostId: room.hostId,
-        hideCategory: room.hideCategory,
         customWordsEnabled: room.customWordsEnabled,
         includeDefaultWords: room.includeDefaultWords,
         requiredWordsPerPlayer: room.requiredWordsPerPlayer,
@@ -58,9 +56,6 @@ export default function registerHandlers(io, socket) {
       if (socket.id !== room.hostId) return callback({ ok: false, error: 'Only the host can change settings' });
       if (room.phase !== 'LOBBY') return callback({ ok: false, error: 'Can only change settings in lobby' });
 
-      if (typeof settings.hideCategory === 'boolean') {
-        room.hideCategory = settings.hideCategory;
-      }
       if (typeof settings.customWordsEnabled === 'boolean') {
         room.customWordsEnabled = settings.customWordsEnabled;
       }
@@ -75,7 +70,6 @@ export default function registerHandlers(io, socket) {
       }
 
       io.to(room.code).emit('settings-updated', {
-        hideCategory: room.hideCategory,
         customWordsEnabled: room.customWordsEnabled,
         includeDefaultWords: room.includeDefaultWords,
         requiredWordsPerPlayer: room.requiredWordsPerPlayer,
@@ -127,7 +121,6 @@ export default function registerHandlers(io, socket) {
           io.to(player.id).emit('game-started', {
             phase: room.phase,
             word: isImposter ? null : room.word,
-            category: (isImposter && room.hideCategory) ? null : room.category,
             isImposter,
             players: room.getPlayerInfo(),
             hostId: room.hostId,
@@ -194,7 +187,6 @@ export default function registerHandlers(io, socket) {
           io.to(player.id).emit('game-started', {
             phase: room.phase,
             word: isImposter ? null : room.word,
-            category: (isImposter && room.hideCategory) ? null : room.category,
             isImposter,
             players: room.getPlayerInfo(),
             hostId: room.hostId,

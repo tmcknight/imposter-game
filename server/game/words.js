@@ -32,18 +32,16 @@ const wordLists = {
 };
 
 export function getRandomWord() {
-  const categories = Object.keys(wordLists);
-  const category = categories[Math.floor(Math.random() * categories.length)];
-  const words = wordLists[category];
-  const word = words[Math.floor(Math.random() * words.length)];
-  return { category, word };
+  const allWords = Object.values(wordLists).flat();
+  const word = allWords[Math.floor(Math.random() * allWords.length)];
+  return { word };
 }
 
 export function getAllDefaultWords() {
   const words = [];
-  for (const [category, wordList] of Object.entries(wordLists)) {
+  for (const wordList of Object.values(wordLists)) {
     for (const word of wordList) {
-      words.push({ word, category, submittedBy: null, submittedByName: null });
+      words.push({ word, submittedBy: null, submittedByName: null });
     }
   }
   return words;

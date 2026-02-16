@@ -16,14 +16,12 @@ export function GameProvider({ children }) {
     players: [],
     hostId: null,
     word: null,
-    category: null,
     isImposter: false,
     voteCount: 0,
     expectedVotes: 0,
     hasVoted: false,
     results: null,
     error: null,
-    hideCategory: false,
     // Custom words
     customWordsEnabled: false,
     includeDefaultWords: false,
@@ -43,12 +41,11 @@ export function GameProvider({ children }) {
       setState(s => ({ ...s, players, hostId }));
     });
 
-    socket.on('game-started', ({ phase, word, category, isImposter, players, hostId }) => {
+    socket.on('game-started', ({ phase, word, isImposter, players, hostId }) => {
       setState(s => ({
         ...s,
         phase,
         word,
-        category,
         isImposter,
         players,
         hostId,
@@ -86,7 +83,6 @@ export function GameProvider({ children }) {
     socket.on('settings-updated', (settings) => {
       setState(s => ({
         ...s,
-        hideCategory: settings.hideCategory ?? s.hideCategory,
         customWordsEnabled: settings.customWordsEnabled ?? s.customWordsEnabled,
         includeDefaultWords: settings.includeDefaultWords ?? s.includeDefaultWords,
         requiredWordsPerPlayer: settings.requiredWordsPerPlayer ?? s.requiredWordsPerPlayer,
@@ -126,7 +122,6 @@ export function GameProvider({ children }) {
           playerName,
           players: res.players,
           hostId: res.hostId,
-          hideCategory: res.hideCategory ?? false,
           customWordsEnabled: res.customWordsEnabled ?? false,
           includeDefaultWords: res.includeDefaultWords ?? false,
           requiredWordsPerPlayer: res.requiredWordsPerPlayer ?? 2,
@@ -149,7 +144,6 @@ export function GameProvider({ children }) {
           playerName,
           players: res.players,
           hostId: res.hostId,
-          hideCategory: res.hideCategory ?? false,
           customWordsEnabled: res.customWordsEnabled ?? false,
           includeDefaultWords: res.includeDefaultWords ?? false,
           requiredWordsPerPlayer: res.requiredWordsPerPlayer ?? 2,
@@ -228,14 +222,12 @@ export function GameProvider({ children }) {
           players: [],
           hostId: null,
           word: null,
-          category: null,
           isImposter: false,
           voteCount: 0,
           expectedVotes: 0,
           hasVoted: false,
           results: null,
           error: null,
-          hideCategory: false,
           customWordsEnabled: false,
           includeDefaultWords: false,
           requiredWordsPerPlayer: 2,

@@ -40,7 +40,7 @@ Node.js with Express and Socket.IO. ES modules throughout (`"type": "module"`).
 - **`index.js`** — Express server on port 3001. Serves built client from `client/dist/` in production. CORS with `origin: '*'`.
 - **`game/Room.js`** — Core game state machine with 5 phases: `LOBBY → WORD_REVEAL → HINTING → VOTING → RESULTS`. Manages players, imposter selection, voting, and host delegation.
 - **`game/RoomManager.js`** — Singleton managing all rooms. Generates 4-char room codes (A-Z, excluding I/O). Schedules cleanup of empty rooms after 5 minutes.
-- **`game/words.js`** — Word pool with 6 categories, 15 words each. `getRandomWord()` returns `{ word, category }`.
+- **`game/words.js`** — Word pool with 90 words across several groups. `getRandomWord()` returns `{ word }`.
 - **`socket/handlers.js`** — All Socket.IO event handlers. Key events: `create-room`, `join-room`, `start-game`, `advance-phase`, `cast-vote`, `play-again`, `return-to-lobby`, `update-settings`.
 
 Socket callbacks use `{ ok, error, ...data }` pattern for error handling.
@@ -57,7 +57,7 @@ Tailwind v4 with custom theme defined in `src/App.css` using `@theme` (no tailwi
 
 ### Communication Flow
 
-Client emits socket events → server validates (host-only checks, phase checks, player limits) → server broadcasts state updates to room. Player identity is tracked by socket ID. Imposter receives `null` for word/category in `game-started` event; full reveal only in results.
+Client emits socket events → server validates (host-only checks, phase checks, player limits) → server broadcasts state updates to room. Player identity is tracked by socket ID. Imposter receives `null` for word in `game-started` event; full reveal only in results.
 
 ### Voting Rules
 
