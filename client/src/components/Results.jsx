@@ -1,6 +1,7 @@
 import { useGame } from '../context/GameContext.jsx';
 import { TrophyIcon, FaceFrownIcon, ArrowPathIcon, ArrowUturnLeftIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import Avatar from './Avatar.jsx';
+import Scoreboard from './Scoreboard.jsx';
 
 export default function Results() {
   const { results, isHost, playAgain, returnToLobby } = useGame();
@@ -72,6 +73,8 @@ export default function Results() {
           ))}
         </ul>
       </div>
+
+      <Scoreboard pointsAwarded={results.pointsAwarded} />
 
       {isHost ? (
         <div className="flex flex-col gap-2.5 mt-2 animate-fade-in-up stagger-6">
