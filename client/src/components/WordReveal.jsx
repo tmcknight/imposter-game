@@ -8,7 +8,7 @@ export default function WordReveal() {
 
   return (
     <div className="flex flex-col items-center gap-6 flex-1 justify-center text-center animate-fade-in">
-      {category && (
+      {revealed && category && (
         <p className="text-sm text-text-dim uppercase tracking-widest">
           Category: <strong className="text-text">{category}</strong>
         </p>
