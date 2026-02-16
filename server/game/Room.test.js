@@ -98,8 +98,7 @@ describe('Room', () => {
     it('removes vote from disconnected player', () => {
       room.startGame();
       // Advance to voting phase
-      room.advancePhase(); // HINTING_1
-      room.advancePhase(); // HINTING_2
+      room.advancePhase(); // HINTING
       room.advancePhase(); // VOTING
       room.castVote('p2', 'host-1');
       room.removePlayer('p2');
@@ -187,26 +186,21 @@ describe('Room', () => {
       expect(room.phase).toBe('WORD_REVEAL');
 
       room.advancePhase();
-      expect(room.phase).toBe('HINTING_1');
-
-      room.advancePhase();
-      expect(room.phase).toBe('HINTING_2');
+      expect(room.phase).toBe('HINTING');
 
       room.advancePhase();
       expect(room.phase).toBe('VOTING');
     });
 
     it('resets votes when entering VOTING phase', () => {
-      room.advancePhase(); // HINTING_1
-      room.advancePhase(); // HINTING_2
+      room.advancePhase(); // HINTING
       room.votes = { 'p1': 'p2' }; // stale votes
       room.advancePhase(); // VOTING
       expect(room.votes).toEqual({});
     });
 
     it('returns tally results when entering RESULTS phase', () => {
-      room.advancePhase(); // HINTING_1
-      room.advancePhase(); // HINTING_2
+      room.advancePhase(); // HINTING
       room.advancePhase(); // VOTING
 
       room.castVote('host-1', 'p2');
@@ -221,13 +215,12 @@ describe('Room', () => {
     });
 
     it('returns null for non-RESULTS phases', () => {
-      const result = room.advancePhase(); // HINTING_1
+      const result = room.advancePhase(); // HINTING
       expect(result).toBeNull();
     });
 
     it('throws when already at RESULTS', () => {
-      room.advancePhase(); // HINTING_1
-      room.advancePhase(); // HINTING_2
+      room.advancePhase(); // HINTING
       room.advancePhase(); // VOTING
       room.advancePhase(); // RESULTS
       expect(() => room.advancePhase()).toThrow('Cannot advance phase');
@@ -239,8 +232,7 @@ describe('Room', () => {
       room.addPlayer('p2', 'Bob');
       room.addPlayer('p3', 'Charlie');
       room.startGame();
-      room.advancePhase(); // HINTING_1
-      room.advancePhase(); // HINTING_2
+      room.advancePhase(); // HINTING
       room.advancePhase(); // VOTING
     });
 
@@ -277,8 +269,7 @@ describe('Room', () => {
       room.addPlayer('p2', 'Bob');
       room.addPlayer('p3', 'Charlie');
       room.startGame();
-      room.advancePhase();
-      room.advancePhase();
+      room.advancePhase(); // HINTING
       room.advancePhase(); // VOTING
     });
 
@@ -301,8 +292,7 @@ describe('Room', () => {
       room.addPlayer('p3', 'Charlie');
       room.startGame();
       room.imposterId = 'p3'; // fix imposter for deterministic tests
-      room.advancePhase();
-      room.advancePhase();
+      room.advancePhase(); // HINTING
       room.advancePhase(); // VOTING
     });
 
@@ -354,8 +344,7 @@ describe('Room', () => {
       room.addPlayer('p3', 'Charlie');
       room.startGame();
       room.imposterId = 'p3'; // fix imposter for deterministic tests
-      room.advancePhase();
-      room.advancePhase();
+      room.advancePhase(); // HINTING
       room.advancePhase(); // VOTING
     });
 
@@ -412,8 +401,7 @@ describe('Room', () => {
       // Round 2
       room.playAgain();
       room.imposterId = 'host-1';
-      room.advancePhase(); // HINTING_1
-      room.advancePhase(); // HINTING_2
+      room.advancePhase(); // HINTING
       room.advancePhase(); // VOTING
 
       room.castVote('host-1', 'p2');
@@ -744,8 +732,7 @@ describe('Room', () => {
         room.submitWords('p2', ['Mango', 'Grape']);
         room.submitWords('p3', ['Apple', 'Lemon']);
         room.advancePhase(); // WORD_REVEAL
-        room.advancePhase(); // HINTING_1
-        room.advancePhase(); // HINTING_2
+        room.advancePhase(); // HINTING
         room.advancePhase(); // VOTING
       });
 

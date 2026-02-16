@@ -3,16 +3,14 @@ import PlayerList from './PlayerList.jsx';
 import { LightBulbIcon, ChatBubbleLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 
 export default function HintPhase() {
-  const { phase, word, isImposter, isHost, advancePhase, category } = useGame();
-  const round = phase === 'HINTING_1' ? 1 : 2;
-  const nextLabel = round === 1 ? 'Start Hints Round 2' : 'Start Voting';
+  const { word, isImposter, isHost, advancePhase, category } = useGame();
 
   return (
     <div className="flex flex-col gap-4 animate-fade-in">
       <div className="text-center">
         <h2 className="text-2xl font-bold flex items-center justify-center gap-2">
           <LightBulbIcon className="w-6 h-6 text-accent" />
-          Hints — Round {round}
+          Hints
         </h2>
         {category && (
           <p className="text-sm text-text-dim mt-1 uppercase tracking-widest">
@@ -41,7 +39,7 @@ export default function HintPhase() {
           onClick={advancePhase}
           className="btn-hover w-full mt-2 bg-accent-green text-bg border-none rounded-xl py-3.5 px-6 text-lg font-semibold cursor-pointer flex items-center justify-center gap-2 glow-green"
         >
-          {nextLabel}
+          Start Voting
           <ArrowRightIcon className="w-5 h-5" />
         </button>
       )}

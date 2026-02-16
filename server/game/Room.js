@@ -1,6 +1,6 @@
 import { getRandomWord, getAllDefaultWords } from './words.js';
 
-const PHASES = ['LOBBY', 'WORD_SUBMISSION', 'WORD_REVEAL', 'HINTING_1', 'HINTING_2', 'VOTING', 'RESULTS'];
+const PHASES = ['LOBBY', 'WORD_SUBMISSION', 'WORD_REVEAL', 'HINTING', 'VOTING', 'RESULTS'];
 
 export default class Room {
   constructor(code, hostId, hostName, hostAvatar) {
