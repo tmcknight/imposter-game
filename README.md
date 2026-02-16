@@ -77,6 +77,10 @@ imposter-game/
 
 Animals, Food, Places, Movies, Occupations, Sports — each with 15 words.
 
+## Acknowledgments
+
+This project was almost entirely coded using [Claude](https://claude.ai) by Anthropic.
+
 ## License
 
 [MIT](LICENSE)
