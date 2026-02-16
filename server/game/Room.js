@@ -24,6 +24,7 @@ export default class Room {
     this.customWordPool = [];    // [{ word, category, submittedBy, submittedByName }]
     this.wordSubmissions = {};   // playerId -> [words]
     this.wordSubmittedBy = null; // name of player who submitted the chosen word
+    this.usedCustomWords = new Set(); // tracks words already used across rounds
 
     // Scoreboard: playerId -> number
     this.scores = {};
@@ -78,6 +79,7 @@ export default class Room {
       this.customWordPool = [];
       this.wordSubmissions = {};
       this.wordSubmittedBy = null;
+      this.usedCustomWords = new Set();
       this.phase = 'WORD_SUBMISSION';
     } else {
       this._pickWordAndImposter();
@@ -101,12 +103,18 @@ export default class Room {
       pool = [...pool, ...getAllDefaultWords()];
     }
 
+    // Filter out already-used words
+    pool = pool.filter(w => !this.usedCustomWords.has(w.word));
+
     if (pool.length === 0) throw new Error('No words available');
 
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     this.word = chosen.word;
     this.category = chosen.category || 'Custom';
     this.wordSubmittedBy = chosen.submittedByName || null;
+
+    // Track this word as used
+    this.usedCustomWords.add(chosen.word);
 
     // Pick imposter, excluding the word submitter
     const connected = this.connectedPlayers;
@@ -117,6 +125,15 @@ export default class Room {
     if (eligible.length === 0) eligible = connected;
 
     this.imposterId = eligible[Math.floor(Math.random() * eligible.length)].id;
+  }
+
+  get allCustomWordsUsed() {
+    if (!this.customWordsEnabled) return false;
+    let pool = [...this.customWordPool];
+    if (this.includeDefaultWords) {
+      pool = [...pool, ...getAllDefaultWords()];
+    }
+    return pool.filter(w => !this.usedCustomWords.has(w.word)).length === 0;
   }
 
   submitWords(playerId, words) {
@@ -277,6 +294,7 @@ export default class Room {
     this.wordSubmittedBy = null;
     this.customWordPool = [];
     this.wordSubmissions = {};
+    this.usedCustomWords = new Set();
     // Remove disconnected players
     this.players = this.players.filter(p => p.connected);
     // Reset scores

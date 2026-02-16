@@ -695,6 +695,7 @@ describe('Room', () => {
         // Run multiple times to verify statistically
         for (let i = 0; i < 50; i++) {
           room.phase = 'WORD_SUBMISSION';
+          room.usedCustomWords = new Set(); // reset to allow re-picking
           room.advancePhase();
           const chosenWord = room.customWordPool.find(w => w.word === room.word);
           expect(room.imposterId).not.toBe(chosenWord.submittedBy);
@@ -765,10 +766,117 @@ describe('Room', () => {
 
       it('does not make submitter the imposter on playAgain', () => {
         for (let i = 0; i < 50; i++) {
+          room.usedCustomWords = new Set(); // reset to allow re-picking
           room.playAgain();
           const chosenWord = room.customWordPool.find(w => w.word === room.word);
           expect(room.imposterId).not.toBe(chosenWord.submittedBy);
         }
+      });
+    });
+
+    describe('custom word reuse prevention', () => {
+      beforeEach(() => {
+        room.startGame();
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        room.submitWords('p2', ['Mango', 'Grape']);
+        room.submitWords('p3', ['Apple', 'Lemon']);
+      });
+
+      it('initializes usedCustomWords as empty set', () => {
+        expect(room.usedCustomWords).toBeInstanceOf(Set);
+        expect(room.usedCustomWords.size).toBe(0);
+      });
+
+      it('tracks used word after picking from pool', () => {
+        room.advancePhase(); // WORD_REVEAL - picks a word
+        expect(room.usedCustomWords.size).toBe(1);
+        expect(room.usedCustomWords.has(room.word)).toBe(true);
+      });
+
+      it('does not reuse words across playAgain rounds', () => {
+        room.advancePhase(); // WORD_REVEAL
+        const usedWords = new Set();
+        usedWords.add(room.word);
+
+        // Play 5 more rounds (6 words total = all words)
+        for (let i = 0; i < 5; i++) {
+          room.playAgain();
+          expect(usedWords.has(room.word)).toBe(false);
+          usedWords.add(room.word);
+        }
+
+        // All 6 words should have been used
+        expect(usedWords.size).toBe(6);
+      });
+
+      it('throws when all custom words are exhausted on playAgain', () => {
+        room.advancePhase(); // WORD_REVEAL
+        // Use remaining 5 words
+        for (let i = 0; i < 5; i++) {
+          room.playAgain();
+        }
+        // 7th attempt should throw
+        expect(() => room.playAgain()).toThrow('No words available');
+      });
+
+      it('allCustomWordsUsed returns true when pool is exhausted', () => {
+        room.advancePhase(); // WORD_REVEAL
+        expect(room.allCustomWordsUsed).toBe(false);
+
+        // Use remaining 5 words
+        for (let i = 0; i < 5; i++) {
+          room.playAgain();
+        }
+        expect(room.allCustomWordsUsed).toBe(true);
+      });
+
+      it('allCustomWordsUsed returns false when custom words disabled', () => {
+        room.customWordsEnabled = false;
+        expect(room.allCustomWordsUsed).toBe(false);
+      });
+
+      it('resets usedCustomWords on startGame', () => {
+        room.advancePhase(); // WORD_REVEAL
+        room.playAgain();
+        expect(room.usedCustomWords.size).toBe(2);
+
+        room.returnToLobby();
+        room.startGame(); // re-enter WORD_SUBMISSION
+        expect(room.usedCustomWords.size).toBe(0);
+      });
+
+      it('resets usedCustomWords on returnToLobby', () => {
+        room.advancePhase(); // WORD_REVEAL
+        expect(room.usedCustomWords.size).toBe(1);
+
+        room.returnToLobby();
+        expect(room.usedCustomWords.size).toBe(0);
+      });
+    });
+
+    describe('custom word reuse with includeDefaultWords', () => {
+      beforeEach(() => {
+        room.includeDefaultWords = true;
+        room.startGame();
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        room.submitWords('p2', ['Mango', 'Grape']);
+        room.submitWords('p3', ['Apple', 'Lemon']);
+      });
+
+      it('does not reuse words even with default words included', () => {
+        room.advancePhase(); // WORD_REVEAL
+        const firstWord = room.word;
+        room.playAgain();
+        expect(room.word).not.toBe(firstWord);
+      });
+
+      it('allCustomWordsUsed considers default words too', () => {
+        room.advancePhase(); // WORD_REVEAL
+        // With 6 custom + 2 mocked defaults (Elephant, Pizza) = 8 unique words
+        for (let i = 0; i < 7; i++) {
+          room.playAgain();
+        }
+        expect(room.allCustomWordsUsed).toBe(true);
       });
     });
 
