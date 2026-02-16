@@ -1,9 +1,9 @@
 import roomManager from '../game/RoomManager.js';
 
 export default function registerHandlers(io, socket) {
-  socket.on('create-room', ({ playerName }, callback) => {
+  socket.on('create-room', ({ playerName, avatar }, callback) => {
     try {
-      const room = roomManager.createRoom(socket.id, playerName);
+      const room = roomManager.createRoom(socket.id, playerName, avatar);
       socket.join(room.code);
       callback({
         ok: true,
@@ -21,12 +21,12 @@ export default function registerHandlers(io, socket) {
     }
   });
 
-  socket.on('join-room', ({ roomCode, playerName }, callback) => {
+  socket.on('join-room', ({ roomCode, playerName, avatar }, callback) => {
     try {
       const room = roomManager.getRoom(roomCode);
       if (!room) return callback({ ok: false, error: 'Room not found' });
 
-      room.addPlayer(socket.id, playerName);
+      room.addPlayer(socket.id, playerName, avatar);
       socket.join(room.code);
 
       // Notify others
@@ -168,14 +168,22 @@ export default function registerHandlers(io, socket) {
 
       if (results) {
         // Results phase - send results with player names
+        const imposterPlayer = room.players.find(p => p.id === results.imposterId);
         const resultsWithNames = {
           ...results,
-          imposterName: room.players.find(p => p.id === results.imposterId)?.name,
+          imposterName: imposterPlayer?.name,
+          imposterAvatar: imposterPlayer?.avatar || null,
           players: room.getPlayerInfo(),
-          voteSummary: Object.entries(results.votes).map(([voterId, targetId]) => ({
-            voter: room.players.find(p => p.id === voterId)?.name,
-            target: room.players.find(p => p.id === targetId)?.name,
-          })),
+          voteSummary: Object.entries(results.votes).map(([voterId, targetId]) => {
+            const voterPlayer = room.players.find(p => p.id === voterId);
+            const targetPlayer = room.players.find(p => p.id === targetId);
+            return {
+              voter: voterPlayer?.name,
+              voterAvatar: voterPlayer?.avatar || null,
+              target: targetPlayer?.name,
+              targetAvatar: targetPlayer?.avatar || null,
+            };
+          }),
         };
         io.to(room.code).emit('results', resultsWithNames);
       } else if (prevPhase === 'WORD_SUBMISSION' && room.phase === 'WORD_REVEAL') {

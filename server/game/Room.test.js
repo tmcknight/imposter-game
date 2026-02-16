@@ -23,7 +23,7 @@ describe('Room', () => {
       expect(room.phase).toBe('LOBBY');
       expect(room.hostId).toBe('host-1');
       expect(room.players).toHaveLength(1);
-      expect(room.players[0]).toEqual({ id: 'host-1', name: 'Alice', connected: true });
+      expect(room.players[0]).toEqual({ id: 'host-1', name: 'Alice', connected: true, avatar: null });
       expect(room.word).toBeNull();
       expect(room.category).toBeNull();
       expect(room.imposterId).toBeNull();
@@ -42,7 +42,7 @@ describe('Room', () => {
     it('adds a player to the room', () => {
       room.addPlayer('player-2', 'Bob');
       expect(room.players).toHaveLength(2);
-      expect(room.players[1]).toEqual({ id: 'player-2', name: 'Bob', connected: true });
+      expect(room.players[1]).toEqual({ id: 'player-2', name: 'Bob', connected: true, avatar: null });
     });
 
     it('throws if game is in progress', () => {
@@ -425,8 +425,8 @@ describe('Room', () => {
       room.addPlayer('p2', 'Bob');
       const info = room.getPlayerInfo();
       expect(info).toEqual([
-        { id: 'host-1', name: 'Alice', connected: true },
-        { id: 'p2', name: 'Bob', connected: true },
+        { id: 'host-1', name: 'Alice', connected: true, avatar: null },
+        { id: 'p2', name: 'Bob', connected: true, avatar: null },
       ]);
     });
   });

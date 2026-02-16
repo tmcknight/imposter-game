@@ -1,5 +1,6 @@
 import { useGame } from '../context/GameContext.jsx';
 import { HandRaisedIcon, CheckCircleIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import Avatar from './Avatar.jsx';
 
 export default function VotingPhase() {
   const { players, playerId, castVote, hasVoted, voteCount, expectedVotes, isHost, advancePhase } = useGame();
@@ -44,9 +45,7 @@ export default function VotingPhase() {
                 onClick={() => castVote(p.id)}
                 className={`vote-btn animate-fade-in-up stagger-${Math.min(i + 1, 6)} w-full bg-surface text-white border-2 border-surface-2 rounded-xl py-4 px-6 text-lg font-semibold cursor-pointer flex items-center gap-3`}
               >
-                <span className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-sm font-bold text-text-dim shrink-0">
-                  {p.name.charAt(0).toUpperCase()}
-                </span>
+                <Avatar name={p.name} avatar={p.avatar} size="md" />
                 {p.name}
               </button>
             ))}

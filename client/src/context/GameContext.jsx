@@ -115,8 +115,8 @@ export function GameProvider({ children }) {
     };
   }, []);
 
-  const createRoom = useCallback((playerName) => {
-    socket.emit('create-room', { playerName }, (res) => {
+  const createRoom = useCallback((playerName, avatar) => {
+    socket.emit('create-room', { playerName, avatar }, (res) => {
       if (res.ok) {
         setState(s => ({
           ...s,
@@ -138,8 +138,8 @@ export function GameProvider({ children }) {
     });
   }, []);
 
-  const joinRoom = useCallback((roomCode, playerName) => {
-    socket.emit('join-room', { roomCode, playerName }, (res) => {
+  const joinRoom = useCallback((roomCode, playerName, avatar) => {
+    socket.emit('join-room', { roomCode, playerName, avatar }, (res) => {
       if (res.ok) {
         setState(s => ({
           ...s,

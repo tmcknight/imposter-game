@@ -1,5 +1,6 @@
 import { useGame } from '../context/GameContext.jsx';
 import { TrophyIcon, FaceFrownIcon, ArrowPathIcon, ArrowUturnLeftIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import Avatar from './Avatar.jsx';
 
 export default function Results() {
   const { results, isHost, playAgain, returnToLobby } = useGame();
@@ -33,9 +34,10 @@ export default function Results() {
 
       {/* Reveal cards */}
       <div className="grid grid-cols-2 gap-3 animate-fade-in-up stagger-2">
-        <div className="bg-surface rounded-xl p-4 text-center glow-surface">
-          <span className="block text-xs text-text-dim uppercase tracking-widest mb-1">Imposter</span>
-          <span className="text-lg font-bold text-accent">{results.imposterName}</span>
+        <div className="bg-surface rounded-xl p-4 text-center glow-surface flex flex-col items-center">
+          <span className="block text-xs text-text-dim uppercase tracking-widest mb-2">Imposter</span>
+          <Avatar name={results.imposterName} avatar={results.imposterAvatar} size="lg" />
+          <span className="text-lg font-bold text-accent mt-1.5">{results.imposterName}</span>
         </div>
         <div className="bg-surface rounded-xl p-4 text-center glow-surface">
           <span className="block text-xs text-text-dim uppercase tracking-widest mb-1">The Word</span>
@@ -56,8 +58,10 @@ export default function Results() {
         <ul className="list-none flex flex-col gap-2">
           {results.voteSummary.map((v, i) => (
             <li key={i} className="text-sm flex items-center gap-2">
+              <Avatar name={v.voter} avatar={v.voterAvatar} size="sm" />
               <span className="text-text-dim">{v.voter}</span>
               <span className="text-text-dim/50">→</span>
+              <Avatar name={v.target} avatar={v.targetAvatar} size="sm" />
               <strong className={v.target === results.imposterName ? 'text-accent-green' : 'text-text'}>
                 {v.target}
               </strong>

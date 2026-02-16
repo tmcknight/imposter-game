@@ -1,6 +1,7 @@
 import { useGame } from '../context/GameContext.jsx';
 import { StarIcon } from '@heroicons/react/24/solid';
-import { SignalSlashIcon, UserCircleIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
+import { SignalSlashIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
+import Avatar from './Avatar.jsx';
 
 export default function PlayerList() {
   const { players, hostId, isHost, phase, transferHost } = useGame();
@@ -13,7 +14,7 @@ export default function PlayerList() {
           key={p.id}
           className={`animate-slide-in-right stagger-${Math.min(i + 1, 6)} py-3.5 px-4 flex items-center gap-2.5 border-b border-bg/50 last:border-b-0 text-base transition-opacity duration-300 ${!p.connected ? 'opacity-40' : ''}`}
         >
-          <UserCircleIcon className={`w-5 h-5 shrink-0 ${p.connected ? 'text-accent-green' : 'text-text-dim'}`} />
+          <Avatar name={p.name} avatar={p.avatar} size="md" />
           <span className="flex-1">{p.name}</span>
           {p.id === hostId && (
             <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase bg-accent/20 text-accent border border-accent/30 inline-flex items-center gap-1">

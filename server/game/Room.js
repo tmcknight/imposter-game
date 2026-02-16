@@ -3,10 +3,10 @@ import { getRandomWord, getAllDefaultWords } from './words.js';
 const PHASES = ['LOBBY', 'WORD_SUBMISSION', 'WORD_REVEAL', 'HINTING_1', 'HINTING_2', 'VOTING', 'RESULTS'];
 
 export default class Room {
-  constructor(code, hostId, hostName) {
+  constructor(code, hostId, hostName, hostAvatar) {
     this.code = code;
     this.phase = 'LOBBY';
-    this.players = [{ id: hostId, name: hostName, connected: true }];
+    this.players = [{ id: hostId, name: hostName, connected: true, avatar: hostAvatar || null }];
     this.hostId = hostId;
     this.word = null;
     this.category = null;
@@ -26,13 +26,13 @@ export default class Room {
     this.wordSubmittedBy = null; // name of player who submitted the chosen word
   }
 
-  addPlayer(id, name) {
+  addPlayer(id, name, avatar) {
     if (this.phase !== 'LOBBY') throw new Error('Game already in progress');
     if (this.players.length >= 12) throw new Error('Room is full');
     if (this.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
       throw new Error('Name already taken');
     }
-    this.players.push({ id, name, connected: true });
+    this.players.push({ id, name, connected: true, avatar: avatar || null });
   }
 
   removePlayer(id) {
@@ -267,6 +267,7 @@ export default class Room {
       id: p.id,
       name: p.name,
       connected: p.connected,
+      avatar: p.avatar || null,
     }));
   }
 }
