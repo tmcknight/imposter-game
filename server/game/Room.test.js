@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Room from './Room.js';
 
-// Mock getRandomWord
+// Mock getRandomWord and getAllDefaultWords
 vi.mock('./words.js', () => ({
   getRandomWord: vi.fn(() => ({ category: 'animals', word: 'Elephant' })),
+  getAllDefaultWords: vi.fn(() => [
+    { word: 'Elephant', category: 'animals', submittedBy: null, submittedByName: null },
+    { word: 'Pizza', category: 'food', submittedBy: null, submittedByName: null },
+  ]),
 }));
 
 describe('Room', () => {
@@ -25,6 +29,12 @@ describe('Room', () => {
       expect(room.imposterId).toBeNull();
       expect(room.votes).toEqual({});
       expect(room.hideCategory).toBe(false);
+      expect(room.customWordsEnabled).toBe(false);
+      expect(room.includeDefaultWords).toBe(false);
+      expect(room.requiredWordsPerPlayer).toBe(2);
+      expect(room.customWordPool).toEqual([]);
+      expect(room.wordSubmissions).toEqual({});
+      expect(room.wordSubmittedBy).toBeNull();
     });
   });
 
@@ -418,6 +428,238 @@ describe('Room', () => {
         { id: 'host-1', name: 'Alice', connected: true },
         { id: 'p2', name: 'Bob', connected: true },
       ]);
+    });
+  });
+
+  describe('custom words', () => {
+    beforeEach(() => {
+      room.addPlayer('p2', 'Bob');
+      room.addPlayer('p3', 'Charlie');
+      room.customWordsEnabled = true;
+      room.requiredWordsPerPlayer = 2;
+    });
+
+    describe('startGame with custom words', () => {
+      it('enters WORD_SUBMISSION phase when custom words enabled', () => {
+        room.startGame();
+        expect(room.phase).toBe('WORD_SUBMISSION');
+        expect(room.customWordPool).toEqual([]);
+        expect(room.wordSubmissions).toEqual({});
+      });
+
+      it('does not pick a word or imposter in WORD_SUBMISSION phase', () => {
+        room.startGame();
+        expect(room.word).toBeNull();
+        expect(room.imposterId).toBeNull();
+      });
+    });
+
+    describe('submitWords', () => {
+      beforeEach(() => {
+        room.startGame(); // enters WORD_SUBMISSION
+      });
+
+      it('adds words to the pool', () => {
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        expect(room.customWordPool).toHaveLength(2);
+        expect(room.customWordPool[0]).toEqual({
+          word: 'Banana',
+          category: 'Custom',
+          submittedBy: 'host-1',
+          submittedByName: 'Alice',
+        });
+      });
+
+      it('tracks submissions per player', () => {
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        expect(room.wordSubmissions['host-1']).toEqual(['Banana', 'Cherry']);
+      });
+
+      it('trims whitespace from words', () => {
+        room.submitWords('host-1', ['  Banana  ', '  Cherry  ']);
+        expect(room.wordSubmissions['host-1']).toEqual(['Banana', 'Cherry']);
+        expect(room.customWordPool[0].word).toBe('Banana');
+      });
+
+      it('throws if not in WORD_SUBMISSION phase', () => {
+        room.returnToLobby();
+        expect(() => room.submitWords('host-1', ['Banana', 'Cherry'])).toThrow('Not in word submission phase');
+      });
+
+      it('throws if wrong number of words', () => {
+        expect(() => room.submitWords('host-1', ['Banana'])).toThrow('Must submit exactly 2 word(s)');
+      });
+
+      it('throws if words are empty', () => {
+        expect(() => room.submitWords('host-1', ['Banana', ''])).toThrow('Words cannot be empty');
+        expect(() => room.submitWords('host-1', ['Banana', '   '])).toThrow('Words cannot be empty');
+      });
+
+      it('throws for unknown player', () => {
+        expect(() => room.submitWords('unknown', ['Banana', 'Cherry'])).toThrow('Player not found');
+      });
+
+      it('allows re-submission (replaces previous)', () => {
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        room.submitWords('host-1', ['Mango', 'Grape']);
+        expect(room.customWordPool).toHaveLength(2);
+        expect(room.wordSubmissions['host-1']).toEqual(['Mango', 'Grape']);
+        expect(room.customWordPool[0].word).toBe('Mango');
+      });
+    });
+
+    describe('getSubmissionStatus', () => {
+      beforeEach(() => {
+        room.startGame();
+      });
+
+      it('returns status for all connected players', () => {
+        const status = room.getSubmissionStatus();
+        expect(status.submissions).toEqual({
+          'host-1': false,
+          'p2': false,
+          'p3': false,
+        });
+        expect(status.submittedCount).toBe(0);
+        expect(status.totalCount).toBe(3);
+      });
+
+      it('tracks submitted players', () => {
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        room.submitWords('p2', ['Mango', 'Grape']);
+        const status = room.getSubmissionStatus();
+        expect(status.submissions['host-1']).toBe(true);
+        expect(status.submissions['p2']).toBe(true);
+        expect(status.submissions['p3']).toBe(false);
+        expect(status.submittedCount).toBe(2);
+        expect(status.totalCount).toBe(3);
+      });
+    });
+
+    describe('advancePhase from WORD_SUBMISSION', () => {
+      beforeEach(() => {
+        room.startGame();
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        room.submitWords('p2', ['Mango', 'Grape']);
+        room.submitWords('p3', ['Apple', 'Lemon']);
+      });
+
+      it('picks a word and imposter when advancing to WORD_REVEAL', () => {
+        room.advancePhase();
+        expect(room.phase).toBe('WORD_REVEAL');
+        expect(room.word).toBeTruthy();
+        expect(room.imposterId).toBeTruthy();
+      });
+
+      it('picks word from custom pool', () => {
+        room.advancePhase();
+        const poolWords = room.customWordPool.map(w => w.word);
+        expect(poolWords).toContain(room.word);
+      });
+
+      it('sets wordSubmittedBy to the submitter name', () => {
+        room.advancePhase();
+        expect(room.wordSubmittedBy).toBeTruthy();
+        // wordSubmittedBy should be one of the player names
+        const names = ['Alice', 'Bob', 'Charlie'];
+        expect(names).toContain(room.wordSubmittedBy);
+      });
+
+      it('does not pick word submitter as imposter', () => {
+        // Run multiple times to verify statistically
+        for (let i = 0; i < 50; i++) {
+          room.phase = 'WORD_SUBMISSION';
+          room.advancePhase();
+          const chosenWord = room.customWordPool.find(w => w.word === room.word);
+          expect(room.imposterId).not.toBe(chosenWord.submittedBy);
+        }
+      });
+
+      it('throws if no words available', () => {
+        room.customWordPool = [];
+        expect(() => room.advancePhase()).toThrow('No words available');
+        expect(room.phase).toBe('WORD_SUBMISSION'); // phase should not have changed
+      });
+    });
+
+    describe('advancePhase with includeDefaultWords', () => {
+      beforeEach(() => {
+        room.includeDefaultWords = true;
+        room.startGame();
+      });
+
+      it('can advance even with no custom submissions if defaults included', () => {
+        // With includeDefaultWords, pool includes defaults even without custom submissions
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        room.submitWords('p2', ['Mango', 'Grape']);
+        room.submitWords('p3', ['Apple', 'Lemon']);
+        room.advancePhase();
+        expect(room.phase).toBe('WORD_REVEAL');
+        expect(room.word).toBeTruthy();
+      });
+    });
+
+    describe('tallyVotes with custom words', () => {
+      beforeEach(() => {
+        room.startGame();
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        room.submitWords('p2', ['Mango', 'Grape']);
+        room.submitWords('p3', ['Apple', 'Lemon']);
+        room.advancePhase(); // WORD_REVEAL
+        room.advancePhase(); // HINTING_1
+        room.advancePhase(); // HINTING_2
+        room.advancePhase(); // VOTING
+      });
+
+      it('includes wordSubmittedBy in results', () => {
+        room.castVote('host-1', 'p2');
+        room.castVote('p2', 'p3');
+        room.castVote('p3', 'host-1');
+        const results = room.tallyVotes();
+        expect(results).toHaveProperty('wordSubmittedBy');
+        expect(typeof results.wordSubmittedBy).toBe('string');
+      });
+    });
+
+    describe('playAgain with custom words', () => {
+      beforeEach(() => {
+        room.startGame();
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        room.submitWords('p2', ['Mango', 'Grape']);
+        room.submitWords('p3', ['Apple', 'Lemon']);
+        room.advancePhase(); // WORD_REVEAL
+      });
+
+      it('re-uses custom word pool on playAgain', () => {
+        const poolBefore = [...room.customWordPool];
+        room.playAgain();
+        expect(room.phase).toBe('WORD_REVEAL');
+        expect(room.word).toBeTruthy();
+        expect(room.customWordPool).toEqual(poolBefore);
+      });
+
+      it('does not make submitter the imposter on playAgain', () => {
+        for (let i = 0; i < 50; i++) {
+          room.playAgain();
+          const chosenWord = room.customWordPool.find(w => w.word === room.word);
+          expect(room.imposterId).not.toBe(chosenWord.submittedBy);
+        }
+      });
+    });
+
+    describe('returnToLobby clears custom words', () => {
+      it('clears custom word state', () => {
+        room.startGame();
+        room.submitWords('host-1', ['Banana', 'Cherry']);
+        room.submitWords('p2', ['Mango', 'Grape']);
+        room.submitWords('p3', ['Apple', 'Lemon']);
+        room.advancePhase(); // WORD_REVEAL
+
+        room.returnToLobby();
+        expect(room.customWordPool).toEqual([]);
+        expect(room.wordSubmissions).toEqual({});
+        expect(room.wordSubmittedBy).toBeNull();
+      });
     });
   });
 });

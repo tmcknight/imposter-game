@@ -1,6 +1,7 @@
 import { useGame } from './context/GameContext.jsx';
 import JoinScreen from './components/JoinScreen.jsx';
 import Lobby from './components/Lobby.jsx';
+import WordSubmission from './components/WordSubmission.jsx';
 import WordReveal from './components/WordReveal.jsx';
 import HintPhase from './components/HintPhase.jsx';
 import VotingPhase from './components/VotingPhase.jsx';
@@ -16,6 +17,8 @@ function App() {
         return <JoinScreen />;
       case 'LOBBY':
         return <Lobby />;
+      case 'WORD_SUBMISSION':
+        return <WordSubmission />;
       case 'WORD_REVEAL':
         return <WordReveal />;
       case 'HINTING_1':

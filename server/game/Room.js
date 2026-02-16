@@ -1,6 +1,6 @@
-import { getRandomWord } from './words.js';
+import { getRandomWord, getAllDefaultWords } from './words.js';
 
-const PHASES = ['LOBBY', 'WORD_REVEAL', 'HINTING_1', 'HINTING_2', 'VOTING', 'RESULTS'];
+const PHASES = ['LOBBY', 'WORD_SUBMISSION', 'WORD_REVEAL', 'HINTING_1', 'HINTING_2', 'VOTING', 'RESULTS'];
 
 export default class Room {
   constructor(code, hostId, hostName) {
@@ -14,6 +14,16 @@ export default class Room {
     this.votes = {};       // voterId -> targetId
     this.cleanupTimer = null;
     this.hideCategory = false; // hide category from imposter
+
+    // Custom words settings
+    this.customWordsEnabled = false;
+    this.includeDefaultWords = false;
+    this.requiredWordsPerPlayer = 2;
+
+    // Custom words state (per-round)
+    this.customWordPool = [];    // [{ word, category, submittedBy, submittedByName }]
+    this.wordSubmissions = {};   // playerId -> [words]
+    this.wordSubmittedBy = null; // name of player who submitted the chosen word
   }
 
   addPlayer(id, name) {
@@ -56,21 +66,105 @@ export default class Room {
 
   startGame() {
     if (this.connectedPlayers.length < 3) throw new Error('Need at least 3 players');
+    this.votes = {};
+
+    if (this.customWordsEnabled) {
+      this.customWordPool = [];
+      this.wordSubmissions = {};
+      this.wordSubmittedBy = null;
+      this.phase = 'WORD_SUBMISSION';
+    } else {
+      this._pickWordAndImposter();
+      this.phase = 'WORD_REVEAL';
+    }
+  }
+
+  _pickWordAndImposter() {
     const { word, category } = getRandomWord();
     this.word = word;
     this.category = category;
-    this.votes = {};
+    this.wordSubmittedBy = null;
 
-    // Pick random imposter from connected players
     const connected = this.connectedPlayers;
     this.imposterId = connected[Math.floor(Math.random() * connected.length)].id;
-    this.phase = 'WORD_REVEAL';
+  }
+
+  _pickWordFromPool() {
+    let pool = [...this.customWordPool];
+    if (this.includeDefaultWords) {
+      pool = [...pool, ...getAllDefaultWords()];
+    }
+
+    if (pool.length === 0) throw new Error('No words available');
+
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    this.word = chosen.word;
+    this.category = chosen.category || 'Custom';
+    this.wordSubmittedBy = chosen.submittedByName || null;
+
+    // Pick imposter, excluding the word submitter
+    const connected = this.connectedPlayers;
+    let eligible = connected;
+    if (chosen.submittedBy) {
+      eligible = connected.filter(p => p.id !== chosen.submittedBy);
+    }
+    if (eligible.length === 0) eligible = connected;
+
+    this.imposterId = eligible[Math.floor(Math.random() * eligible.length)].id;
+  }
+
+  submitWords(playerId, words) {
+    if (this.phase !== 'WORD_SUBMISSION') throw new Error('Not in word submission phase');
+    const player = this.players.find(p => p.id === playerId && p.connected);
+    if (!player) throw new Error('Player not found');
+    if (!Array.isArray(words) || words.length !== this.requiredWordsPerPlayer) {
+      throw new Error(`Must submit exactly ${this.requiredWordsPerPlayer} word(s)`);
+    }
+    if (words.some(w => typeof w !== 'string' || w.trim().length === 0)) {
+      throw new Error('Words cannot be empty');
+    }
+
+    // Remove previous submissions from this player (allows re-submission)
+    this.customWordPool = this.customWordPool.filter(w => w.submittedBy !== playerId);
+
+    // Store submissions
+    this.wordSubmissions[playerId] = words.map(w => w.trim());
+
+    // Add to pool
+    for (const word of words) {
+      this.customWordPool.push({
+        word: word.trim(),
+        category: 'Custom',
+        submittedBy: playerId,
+        submittedByName: player.name,
+      });
+    }
+  }
+
+  getSubmissionStatus() {
+    const submissions = {};
+    for (const player of this.connectedPlayers) {
+      submissions[player.id] = !!this.wordSubmissions[player.id];
+    }
+    return {
+      submissions,
+      submittedCount: Object.values(submissions).filter(Boolean).length,
+      totalCount: this.connectedPlayers.length,
+    };
   }
 
   advancePhase() {
     const idx = PHASES.indexOf(this.phase);
     if (idx === -1 || idx >= PHASES.length - 1) throw new Error('Cannot advance phase');
-    this.phase = PHASES[idx + 1];
+
+    const nextPhase = PHASES[idx + 1];
+
+    // If transitioning from WORD_SUBMISSION, pick word before updating phase
+    if (this.phase === 'WORD_SUBMISSION' && nextPhase === 'WORD_REVEAL') {
+      this._pickWordFromPool();
+    }
+
+    this.phase = nextPhase;
 
     if (this.phase === 'VOTING') {
       this.votes = {};
@@ -128,6 +222,7 @@ export default class Room {
       imposterCaught,
       word: this.word,
       category: this.category,
+      wordSubmittedBy: this.wordSubmittedBy,
     };
   }
 
@@ -135,7 +230,15 @@ export default class Room {
     this.votes = {};
     // Remove disconnected players
     this.players = this.players.filter(p => p.connected);
-    this.startGame();
+
+    if (this.connectedPlayers.length < 3) throw new Error('Need at least 3 players');
+
+    if (this.customWordsEnabled && this.customWordPool.length > 0) {
+      this._pickWordFromPool();
+    } else {
+      this._pickWordAndImposter();
+    }
+    this.phase = 'WORD_REVEAL';
   }
 
   returnToLobby() {
@@ -144,6 +247,9 @@ export default class Room {
     this.category = null;
     this.imposterId = null;
     this.votes = {};
+    this.wordSubmittedBy = null;
+    this.customWordPool = [];
+    this.wordSubmissions = {};
     // Remove disconnected players
     this.players = this.players.filter(p => p.connected);
   }

@@ -12,6 +12,9 @@ export default function registerHandlers(io, socket) {
         players: room.getPlayerInfo(),
         hostId: room.hostId,
         hideCategory: room.hideCategory,
+        customWordsEnabled: room.customWordsEnabled,
+        includeDefaultWords: room.includeDefaultWords,
+        requiredWordsPerPlayer: room.requiredWordsPerPlayer,
       });
     } catch (err) {
       callback({ ok: false, error: err.message });
@@ -39,6 +42,9 @@ export default function registerHandlers(io, socket) {
         players: room.getPlayerInfo(),
         hostId: room.hostId,
         hideCategory: room.hideCategory,
+        customWordsEnabled: room.customWordsEnabled,
+        includeDefaultWords: room.includeDefaultWords,
+        requiredWordsPerPlayer: room.requiredWordsPerPlayer,
       });
     } catch (err) {
       callback({ ok: false, error: err.message });
@@ -55,8 +61,25 @@ export default function registerHandlers(io, socket) {
       if (typeof settings.hideCategory === 'boolean') {
         room.hideCategory = settings.hideCategory;
       }
+      if (typeof settings.customWordsEnabled === 'boolean') {
+        room.customWordsEnabled = settings.customWordsEnabled;
+      }
+      if (typeof settings.includeDefaultWords === 'boolean') {
+        room.includeDefaultWords = settings.includeDefaultWords;
+      }
+      if (typeof settings.requiredWordsPerPlayer === 'number') {
+        const n = Math.floor(settings.requiredWordsPerPlayer);
+        if (n >= 1 && n <= 5) {
+          room.requiredWordsPerPlayer = n;
+        }
+      }
 
-      io.to(room.code).emit('settings-updated', { hideCategory: room.hideCategory });
+      io.to(room.code).emit('settings-updated', {
+        hideCategory: room.hideCategory,
+        customWordsEnabled: room.customWordsEnabled,
+        includeDefaultWords: room.includeDefaultWords,
+        requiredWordsPerPlayer: room.requiredWordsPerPlayer,
+      });
       callback({ ok: true });
     } catch (err) {
       callback({ ok: false, error: err.message });
@@ -90,18 +113,43 @@ export default function registerHandlers(io, socket) {
 
       room.startGame();
 
-      // Send personalized payloads
-      for (const player of room.connectedPlayers) {
-        const isImposter = player.id === room.imposterId;
-        io.to(player.id).emit('game-started', {
+      if (room.phase === 'WORD_SUBMISSION') {
+        // Custom words mode - broadcast phase change, no word info yet
+        io.to(room.code).emit('phase-changed', {
           phase: room.phase,
-          word: isImposter ? null : room.word,
-          category: (isImposter && room.hideCategory) ? null : room.category,
-          isImposter,
           players: room.getPlayerInfo(),
           hostId: room.hostId,
         });
+      } else {
+        // Normal mode - send personalized payloads
+        for (const player of room.connectedPlayers) {
+          const isImposter = player.id === room.imposterId;
+          io.to(player.id).emit('game-started', {
+            phase: room.phase,
+            word: isImposter ? null : room.word,
+            category: (isImposter && room.hideCategory) ? null : room.category,
+            isImposter,
+            players: room.getPlayerInfo(),
+            hostId: room.hostId,
+          });
+        }
       }
+
+      callback({ ok: true });
+    } catch (err) {
+      callback({ ok: false, error: err.message });
+    }
+  });
+
+  socket.on('submit-words', ({ roomCode, words }, callback) => {
+    try {
+      const room = roomManager.getRoom(roomCode);
+      if (!room) return callback({ ok: false, error: 'Room not found' });
+
+      room.submitWords(socket.id, words);
+
+      // Broadcast submission status update
+      io.to(room.code).emit('word-submissions-update', room.getSubmissionStatus());
 
       callback({ ok: true });
     } catch (err) {
@@ -115,6 +163,7 @@ export default function registerHandlers(io, socket) {
       if (!room) return callback({ ok: false, error: 'Room not found' });
       if (socket.id !== room.hostId) return callback({ ok: false, error: 'Only the host can advance' });
 
+      const prevPhase = room.phase;
       const results = room.advancePhase();
 
       if (results) {
@@ -129,6 +178,19 @@ export default function registerHandlers(io, socket) {
           })),
         };
         io.to(room.code).emit('results', resultsWithNames);
+      } else if (prevPhase === 'WORD_SUBMISSION' && room.phase === 'WORD_REVEAL') {
+        // Transitioning from word submission - send personalized payloads
+        for (const player of room.connectedPlayers) {
+          const isImposter = player.id === room.imposterId;
+          io.to(player.id).emit('game-started', {
+            phase: room.phase,
+            word: isImposter ? null : room.word,
+            category: (isImposter && room.hideCategory) ? null : room.category,
+            isImposter,
+            players: room.getPlayerInfo(),
+            hostId: room.hostId,
+          });
+        }
       } else {
         io.to(room.code).emit('phase-changed', {
           phase: room.phase,
@@ -214,6 +276,11 @@ export default function registerHandlers(io, socket) {
         players: room.getPlayerInfo(),
         hostId: room.hostId,
       });
+
+      // If in word submission phase, update submission status
+      if (room.phase === 'WORD_SUBMISSION') {
+        socket.to(room.code).emit('word-submissions-update', room.getSubmissionStatus());
+      }
     }
   });
 }
