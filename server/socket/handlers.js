@@ -63,6 +63,25 @@ export default function registerHandlers(io, socket) {
     }
   });
 
+  socket.on('transfer-host', ({ roomCode, newHostId }, callback) => {
+    try {
+      const room = roomManager.getRoom(roomCode);
+      if (!room) return callback({ ok: false, error: 'Room not found' });
+      if (socket.id !== room.hostId) return callback({ ok: false, error: 'Only the host can transfer host' });
+
+      room.transferHost(newHostId);
+
+      io.to(room.code).emit('host-changed', {
+        hostId: room.hostId,
+        players: room.getPlayerInfo(),
+      });
+
+      callback({ ok: true });
+    } catch (err) {
+      callback({ ok: false, error: err.message });
+    }
+  });
+
   socket.on('start-game', ({ roomCode }, callback) => {
     try {
       const room = roomManager.getRoom(roomCode);

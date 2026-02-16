@@ -378,6 +378,38 @@ describe('Room', () => {
     });
   });
 
+  describe('transferHost', () => {
+    beforeEach(() => {
+      room.addPlayer('p2', 'Bob');
+      room.addPlayer('p3', 'Charlie');
+    });
+
+    it('transfers host to another player', () => {
+      room.transferHost('p2');
+      expect(room.hostId).toBe('p2');
+    });
+
+    it('throws if not in LOBBY phase', () => {
+      room.startGame();
+      expect(() => room.transferHost('p2')).toThrow('Can only transfer host in lobby');
+    });
+
+    it('throws for invalid player id', () => {
+      expect(() => room.transferHost('nonexistent')).toThrow('Invalid player');
+    });
+
+    it('throws if target is already the host', () => {
+      expect(() => room.transferHost('host-1')).toThrow('Player is already the host');
+    });
+
+    it('throws for disconnected player', () => {
+      room.startGame();
+      room.removePlayer('p2');
+      room.returnToLobby();
+      expect(() => room.transferHost('p2')).toThrow('Invalid player');
+    });
+  });
+
   describe('getPlayerInfo', () => {
     it('returns sanitized player info', () => {
       room.addPlayer('p2', 'Bob');

@@ -69,6 +69,10 @@ export function GameProvider({ children }) {
       setState(s => ({ ...s, voteCount, expectedVotes }));
     });
 
+    socket.on('host-changed', ({ hostId, players }) => {
+      setState(s => ({ ...s, hostId, players }));
+    });
+
     socket.on('settings-updated', ({ hideCategory }) => {
       setState(s => ({ ...s, hideCategory }));
     });
@@ -83,6 +87,7 @@ export function GameProvider({ children }) {
       socket.off('game-started');
       socket.off('phase-changed');
       socket.off('vote-update');
+      socket.off('host-changed');
       socket.off('settings-updated');
       socket.off('results');
       socket.disconnect();
@@ -163,6 +168,12 @@ export function GameProvider({ children }) {
     });
   }, [state.roomCode]);
 
+  const transferHost = useCallback((newHostId) => {
+    socket.emit('transfer-host', { roomCode: state.roomCode, newHostId }, (res) => {
+      if (!res.ok) setState(s => ({ ...s, error: res.error }));
+    });
+  }, [state.roomCode]);
+
   const updateSettings = useCallback((settings) => {
     socket.emit('update-settings', { roomCode: state.roomCode, settings }, (res) => {
       if (!res.ok) setState(s => ({ ...s, error: res.error }));
@@ -186,6 +197,7 @@ export function GameProvider({ children }) {
       castVote,
       playAgain,
       returnToLobby,
+      transferHost,
       updateSettings,
       clearError,
     }}>
