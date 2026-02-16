@@ -39,4 +39,14 @@ export function getRandomWord() {
   return { category, word };
 }
 
+export function getAllDefaultWords() {
+  const words = [];
+  for (const [category, wordList] of Object.entries(wordLists)) {
+    for (const word of wordList) {
+      words.push({ word, category, submittedBy: null, submittedByName: null });
+    }
+  }
+  return words;
+}
+
 export default wordLists;

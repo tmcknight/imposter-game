@@ -24,6 +24,12 @@ export function GameProvider({ children }) {
     results: null,
     error: null,
     hideCategory: false,
+    // Custom words
+    customWordsEnabled: false,
+    includeDefaultWords: false,
+    requiredWordsPerPlayer: 2,
+    wordSubmissionStatus: null,
+    hasSubmittedWords: false,
   });
 
   useEffect(() => {
@@ -50,6 +56,8 @@ export function GameProvider({ children }) {
         voteCount: 0,
         expectedVotes: 0,
         results: null,
+        hasSubmittedWords: false,
+        wordSubmissionStatus: null,
       }));
     });
 
@@ -62,6 +70,8 @@ export function GameProvider({ children }) {
         hasVoted: false,
         voteCount: 0,
         expectedVotes: 0,
+        hasSubmittedWords: false,
+        wordSubmissionStatus: null,
       }));
     });
 
@@ -73,8 +83,18 @@ export function GameProvider({ children }) {
       setState(s => ({ ...s, hostId, players }));
     });
 
-    socket.on('settings-updated', ({ hideCategory }) => {
-      setState(s => ({ ...s, hideCategory }));
+    socket.on('settings-updated', (settings) => {
+      setState(s => ({
+        ...s,
+        hideCategory: settings.hideCategory ?? s.hideCategory,
+        customWordsEnabled: settings.customWordsEnabled ?? s.customWordsEnabled,
+        includeDefaultWords: settings.includeDefaultWords ?? s.includeDefaultWords,
+        requiredWordsPerPlayer: settings.requiredWordsPerPlayer ?? s.requiredWordsPerPlayer,
+      }));
+    });
+
+    socket.on('word-submissions-update', (status) => {
+      setState(s => ({ ...s, wordSubmissionStatus: status }));
     });
 
     socket.on('results', (results) => {
@@ -89,6 +109,7 @@ export function GameProvider({ children }) {
       socket.off('vote-update');
       socket.off('host-changed');
       socket.off('settings-updated');
+      socket.off('word-submissions-update');
       socket.off('results');
       socket.disconnect();
     };
@@ -106,6 +127,9 @@ export function GameProvider({ children }) {
           players: res.players,
           hostId: res.hostId,
           hideCategory: res.hideCategory ?? false,
+          customWordsEnabled: res.customWordsEnabled ?? false,
+          includeDefaultWords: res.includeDefaultWords ?? false,
+          requiredWordsPerPlayer: res.requiredWordsPerPlayer ?? 2,
           error: null,
         }));
       } else {
@@ -126,6 +150,9 @@ export function GameProvider({ children }) {
           players: res.players,
           hostId: res.hostId,
           hideCategory: res.hideCategory ?? false,
+          customWordsEnabled: res.customWordsEnabled ?? false,
+          includeDefaultWords: res.includeDefaultWords ?? false,
+          requiredWordsPerPlayer: res.requiredWordsPerPlayer ?? 2,
           error: null,
         }));
       } else {
@@ -180,6 +207,16 @@ export function GameProvider({ children }) {
     });
   }, [state.roomCode]);
 
+  const submitWords = useCallback((words) => {
+    socket.emit('submit-words', { roomCode: state.roomCode, words }, (res) => {
+      if (res.ok) {
+        setState(s => ({ ...s, hasSubmittedWords: true }));
+      } else {
+        setState(s => ({ ...s, error: res.error }));
+      }
+    });
+  }, [state.roomCode]);
+
   const clearError = useCallback(() => {
     setState(s => ({ ...s, error: null }));
   }, []);
@@ -199,6 +236,7 @@ export function GameProvider({ children }) {
       returnToLobby,
       transferHost,
       updateSettings,
+      submitWords,
       clearError,
     }}>
       {children}

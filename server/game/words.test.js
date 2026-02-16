@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import wordLists, { getRandomWord } from './words.js';
+import wordLists, { getRandomWord, getAllDefaultWords } from './words.js';
 
 describe('wordLists', () => {
   it('has 6 categories', () => {
@@ -54,5 +54,34 @@ describe('getRandomWord', () => {
       const { category, word } = getRandomWord();
       expect(wordLists[category]).toContain(word);
     }
+  });
+});
+
+describe('getAllDefaultWords', () => {
+  it('returns an array of all words from all categories', () => {
+    const allWords = getAllDefaultWords();
+    // 6 categories x 15 words = 90
+    expect(allWords).toHaveLength(90);
+  });
+
+  it('each entry has word, category, submittedBy null, submittedByName null', () => {
+    const allWords = getAllDefaultWords();
+    for (const entry of allWords) {
+      expect(entry).toHaveProperty('word');
+      expect(entry).toHaveProperty('category');
+      expect(entry.submittedBy).toBeNull();
+      expect(entry.submittedByName).toBeNull();
+      expect(typeof entry.word).toBe('string');
+      expect(typeof entry.category).toBe('string');
+    }
+  });
+
+  it('contains words from every category', () => {
+    const allWords = getAllDefaultWords();
+    const categories = new Set(allWords.map(w => w.category));
+    expect(categories.size).toBe(6);
+    expect([...categories]).toEqual(
+      expect.arrayContaining(['animals', 'food', 'places', 'movies', 'occupations', 'sports'])
+    );
   });
 });
