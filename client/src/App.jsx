@@ -21,8 +21,7 @@ function App() {
         return <WordSubmission />;
       case 'WORD_REVEAL':
         return <WordReveal />;
-      case 'HINTING_1':
-      case 'HINTING_2':
+      case 'HINTING':
         return <HintPhase />;
       case 'VOTING':
         return <VotingPhase />;

@@ -38,7 +38,7 @@ Real-time multiplayer social deduction game (3-12 players). One player is secret
 Node.js with Express and Socket.IO. ES modules throughout (`"type": "module"`).
 
 - **`index.js`** — Express server on port 3001. Serves built client from `client/dist/` in production. CORS with `origin: '*'`.
-- **`game/Room.js`** — Core game state machine with 6 phases: `LOBBY → WORD_REVEAL → HINTING_1 → HINTING_2 → VOTING → RESULTS`. Manages players, imposter selection, voting, and host delegation.
+- **`game/Room.js`** — Core game state machine with 5 phases: `LOBBY → WORD_REVEAL → HINTING → VOTING → RESULTS`. Manages players, imposter selection, voting, and host delegation.
 - **`game/RoomManager.js`** — Singleton managing all rooms. Generates 4-char room codes (A-Z, excluding I/O). Schedules cleanup of empty rooms after 5 minutes.
 - **`game/words.js`** — Word pool with 6 categories, 15 words each. `getRandomWord()` returns `{ word, category }`.
 - **`socket/handlers.js`** — All Socket.IO event handlers. Key events: `create-room`, `join-room`, `start-game`, `advance-phase`, `cast-vote`, `play-again`, `return-to-lobby`, `update-settings`.
