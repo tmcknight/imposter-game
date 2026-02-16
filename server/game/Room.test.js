@@ -335,6 +335,131 @@ describe('Room', () => {
     });
   });
 
+  describe('scoreboard', () => {
+    beforeEach(() => {
+      room.addPlayer('p2', 'Bob');
+      room.addPlayer('p3', 'Charlie');
+      room.startGame();
+      room.imposterId = 'p3'; // fix imposter for deterministic tests
+      room.advancePhase();
+      room.advancePhase();
+      room.advancePhase(); // VOTING
+    });
+
+    it('initializes scores to 0 for all players', () => {
+      expect(room.scores['host-1']).toBe(0);
+      expect(room.scores['p2']).toBe(0);
+      expect(room.scores['p3']).toBe(0);
+    });
+
+    it('awards +1 to players who correctly voted for imposter', () => {
+      room.castVote('host-1', 'p3');
+      room.castVote('p2', 'p3');
+      room.castVote('p3', 'host-1');
+
+      const results = room.tallyVotes();
+      expect(results.pointsAwarded['host-1']).toBe(1);
+      expect(results.pointsAwarded['p2']).toBe(1);
+      expect(results.pointsAwarded['p3']).toBeUndefined();
+      expect(room.scores['host-1']).toBe(1);
+      expect(room.scores['p2']).toBe(1);
+      expect(room.scores['p3']).toBe(0);
+    });
+
+    it('awards +3 to imposter when imposter wins (wrong person accused)', () => {
+      room.castVote('host-1', 'p2');
+      room.castVote('p2', 'host-1');
+      room.castVote('p3', 'p2');
+
+      const results = room.tallyVotes();
+      expect(results.pointsAwarded['p3']).toBe(3);
+      expect(room.scores['p3']).toBe(3);
+      expect(room.scores['host-1']).toBe(0);
+      expect(room.scores['p2']).toBe(0);
+    });
+
+    it('awards +3 to imposter on tie', () => {
+      room.castVote('host-1', 'p2');
+      room.castVote('p2', 'p3');
+      room.castVote('p3', 'host-1');
+
+      const results = room.tallyVotes();
+      expect(results.pointsAwarded['p3']).toBe(3);
+      expect(room.scores['p3']).toBe(3);
+    });
+
+    it('accumulates scores across multiple rounds', () => {
+      // Round 1: imposter caught
+      room.castVote('host-1', 'p3');
+      room.castVote('p2', 'p3');
+      room.castVote('p3', 'host-1');
+      room.tallyVotes();
+      expect(room.scores['host-1']).toBe(1);
+
+      // Round 2
+      room.playAgain();
+      room.imposterId = 'host-1';
+      room.advancePhase(); // HINTING_1
+      room.advancePhase(); // HINTING_2
+      room.advancePhase(); // VOTING
+
+      room.castVote('host-1', 'p2');
+      room.castVote('p2', 'p3');
+      room.castVote('p3', 'p2');
+      room.tallyVotes();
+      // host-1 (imposter) wins -> +3
+      expect(room.scores['host-1']).toBe(1 + 3);
+    });
+
+    it('includes scores in getPlayerInfo()', () => {
+      room.castVote('host-1', 'p3');
+      room.castVote('p2', 'p3');
+      room.castVote('p3', 'host-1');
+      room.tallyVotes();
+
+      const info = room.getPlayerInfo();
+      const alice = info.find(p => p.id === 'host-1');
+      expect(alice.score).toBe(1);
+    });
+
+    it('resets scores on returnToLobby', () => {
+      room.castVote('host-1', 'p3');
+      room.castVote('p2', 'p3');
+      room.castVote('p3', 'host-1');
+      room.tallyVotes();
+      expect(room.scores['host-1']).toBe(1);
+
+      room.returnToLobby();
+      expect(room.scores['host-1']).toBe(0);
+      expect(room.scores['p2']).toBe(0);
+      expect(room.scores['p3']).toBe(0);
+    });
+
+    it('preserves scores across playAgain', () => {
+      room.castVote('host-1', 'p3');
+      room.castVote('p2', 'p3');
+      room.castVote('p3', 'host-1');
+      room.tallyVotes();
+
+      room.playAgain();
+      expect(room.scores['host-1']).toBe(1);
+      expect(room.scores['p2']).toBe(1);
+      expect(room.scores['p3']).toBe(0);
+    });
+
+    it('cleans up disconnected player scores on playAgain', () => {
+      const r = new Room('TEST', 'h1', 'Alice');
+      r.addPlayer('p2', 'Bob');
+      r.addPlayer('p3', 'Charlie');
+      r.addPlayer('p4', 'Dave');
+      r.startGame();
+      r.scores['p2'] = 5;
+      r.removePlayer('p2');
+      r.playAgain();
+      expect(r.scores['p2']).toBeUndefined();
+    });
+  });
+
   describe('playAgain', () => {
     beforeEach(() => {
       room.addPlayer('p2', 'Bob');
@@ -425,8 +550,8 @@ describe('Room', () => {
       room.addPlayer('p2', 'Bob');
       const info = room.getPlayerInfo();
       expect(info).toEqual([
-        { id: 'host-1', name: 'Alice', connected: true, avatar: null },
-        { id: 'p2', name: 'Bob', connected: true, avatar: null },
+        { id: 'host-1', name: 'Alice', connected: true, avatar: null, score: 0 },
+        { id: 'p2', name: 'Bob', connected: true, avatar: null, score: 0 },
       ]);
     });
   });

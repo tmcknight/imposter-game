@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext.jsx';
 import PlayerList from './PlayerList.jsx';
+import Scoreboard from './Scoreboard.jsx';
 import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon, PlayIcon, EyeSlashIcon, PencilSquareIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 
 export default function Lobby() {
@@ -45,6 +46,8 @@ export default function Lobby() {
       </div>
 
       <PlayerList />
+
+      <Scoreboard />
 
       {/* Settings - host only */}
       {isHost && (

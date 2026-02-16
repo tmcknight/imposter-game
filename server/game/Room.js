@@ -24,6 +24,10 @@ export default class Room {
     this.customWordPool = [];    // [{ word, category, submittedBy, submittedByName }]
     this.wordSubmissions = {};   // playerId -> [words]
     this.wordSubmittedBy = null; // name of player who submitted the chosen word
+
+    // Scoreboard: playerId -> number
+    this.scores = {};
+    this.scores[hostId] = 0;
   }
 
   addPlayer(id, name, avatar) {
@@ -33,6 +37,7 @@ export default class Room {
       throw new Error('Name already taken');
     }
     this.players.push({ id, name, connected: true, avatar: avatar || null });
+    this.scores[id] = 0;
   }
 
   removePlayer(id) {
@@ -213,6 +218,22 @@ export default class Room {
     const isTie = accused.length > 1;
     const imposterCaught = !isTie && accused[0] === this.imposterId;
 
+    // Award points
+    const pointsAwarded = {};
+    if (imposterCaught) {
+      // Each player who voted for the imposter gets +1
+      for (const [voterId, targetId] of Object.entries(this.votes)) {
+        if (targetId === this.imposterId) {
+          this.scores[voterId] = (this.scores[voterId] || 0) + 1;
+          pointsAwarded[voterId] = 1;
+        }
+      }
+    } else {
+      // Imposter gets +3
+      this.scores[this.imposterId] = (this.scores[this.imposterId] || 0) + 3;
+      pointsAwarded[this.imposterId] = 3;
+    }
+
     return {
       votes: this.votes,
       counts,
@@ -223,12 +244,17 @@ export default class Room {
       word: this.word,
       category: this.category,
       wordSubmittedBy: this.wordSubmittedBy,
+      pointsAwarded,
     };
   }
 
   playAgain() {
     this.votes = {};
     // Remove disconnected players
+    const disconnected = this.players.filter(p => !p.connected);
+    for (const p of disconnected) {
+      delete this.scores[p.id];
+    }
     this.players = this.players.filter(p => p.connected);
 
     if (this.connectedPlayers.length < 3) throw new Error('Need at least 3 players');
@@ -252,6 +278,10 @@ export default class Room {
     this.wordSubmissions = {};
     // Remove disconnected players
     this.players = this.players.filter(p => p.connected);
+    // Reset scores
+    for (const player of this.players) {
+      this.scores[player.id] = 0;
+    }
   }
 
   transferHost(newHostId) {
@@ -268,6 +298,7 @@ export default class Room {
       name: p.name,
       connected: p.connected,
       avatar: p.avatar || null,
+      score: this.scores[p.id] || 0,
     }));
   }
 }
