@@ -122,6 +122,19 @@ describe('Room', () => {
       room.removePlayer('unknown');
       expect(room.players).toHaveLength(3);
     });
+
+    it('cleans up score when removing player in LOBBY', () => {
+      expect(room.scores['p2']).toBe(0);
+      room.removePlayer('p2');
+      expect(room.scores['p2']).toBeUndefined();
+    });
+
+    it('transfers host to next connected player when host leaves in LOBBY', () => {
+      room.removePlayer('host-1');
+      expect(room.hostId).toBe('p2');
+      expect(room.players.some(p => p.id === 'host-1')).toBe(false);
+      expect(room.scores['host-1']).toBeUndefined();
+    });
   });
 
   describe('connectedPlayers', () => {

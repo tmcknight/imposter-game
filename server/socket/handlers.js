@@ -276,6 +276,29 @@ export default function registerHandlers(io, socket) {
     }
   });
 
+  socket.on('leave-room', ({ roomCode }, callback) => {
+    try {
+      const room = roomManager.getRoom(roomCode);
+      if (!room) return callback({ ok: false, error: 'Room not found' });
+
+      const empty = room.removePlayer(socket.id);
+      socket.leave(room.code);
+
+      if (empty) {
+        roomManager.scheduleCleanup(room.code);
+      } else {
+        socket.to(room.code).emit('player-left', {
+          players: room.getPlayerInfo(),
+          hostId: room.hostId,
+        });
+      }
+
+      callback({ ok: true });
+    } catch (err) {
+      callback({ ok: false, error: err.message });
+    }
+  });
+
   socket.on('disconnect', () => {
     const result = roomManager.removePlayerFromAll(socket.id);
     if (result) {
