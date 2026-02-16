@@ -214,3 +214,17 @@ body::before {
 .animate-toast {
   animation: toast-in 0.2s ease-out both;
 }
+
+/* ── Scoreboard score animations ───────────────────── */
+@keyframes badge-merge {
+  0% { opacity: 1; transform: scale(1) translateX(0); }
+  100% { opacity: 0; transform: scale(0.5) translateX(12px); }
+}
+
+.animate-badge-merge {
+  animation: badge-merge 0.4s ease-in forwards;
+}
+
+.score-glow {
+  text-shadow: 0 0 8px rgba(78, 204, 163, 0.6);
+}
