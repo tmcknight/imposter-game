@@ -148,6 +148,14 @@ export default class Room {
     this.players = this.players.filter(p => p.connected);
   }
 
+  transferHost(newHostId) {
+    if (this.phase !== 'LOBBY') throw new Error('Can only transfer host in lobby');
+    const target = this.players.find(p => p.id === newHostId && p.connected);
+    if (!target) throw new Error('Invalid player');
+    if (newHostId === this.hostId) throw new Error('Player is already the host');
+    this.hostId = newHostId;
+  }
+
   getPlayerInfo() {
     return this.players.map(p => ({
       id: p.id,
