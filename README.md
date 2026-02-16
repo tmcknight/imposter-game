@@ -56,7 +56,19 @@ npm run dev:client
 cd client && npx vite build
 ```
 
-The built files will be in `client/dist/`.
+The built files will be in `client/dist/`. The server automatically serves these files when the `client/dist` directory exists, so you can run the full app with just the server:
+
+```sh
+cd server && node index.js
+```
+
+### Run with Docker
+
+```sh
+docker compose up --build
+```
+
+The app will be available at `http://localhost:3001`.
 
 ## Project Structure
 
@@ -71,6 +83,8 @@ imposter-game/
 ├── server/                 # Node.js backend
 │   ├── game/               # Room, word list, room manager
 │   └── socket/             # Socket.IO event handlers
+├── Dockerfile              # Multi-stage production build
+├── docker-compose.yml      # Docker Compose config
 ├── package.json            # Root scripts (dev, install:all)
 └── LICENSE
 ```
