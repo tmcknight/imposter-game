@@ -217,6 +217,37 @@ export function GameProvider({ children }) {
     });
   }, [state.roomCode]);
 
+  const leaveRoom = useCallback(() => {
+    socket.emit('leave-room', { roomCode: state.roomCode }, (res) => {
+      if (res.ok) {
+        setState({
+          phase: null,
+          roomCode: null,
+          playerId: null,
+          playerName: null,
+          players: [],
+          hostId: null,
+          word: null,
+          category: null,
+          isImposter: false,
+          voteCount: 0,
+          expectedVotes: 0,
+          hasVoted: false,
+          results: null,
+          error: null,
+          hideCategory: false,
+          customWordsEnabled: false,
+          includeDefaultWords: false,
+          requiredWordsPerPlayer: 2,
+          wordSubmissionStatus: null,
+          hasSubmittedWords: false,
+        });
+      } else {
+        setState(s => ({ ...s, error: res.error }));
+      }
+    });
+  }, [state.roomCode]);
+
   const clearError = useCallback(() => {
     setState(s => ({ ...s, error: null }));
   }, []);
@@ -237,6 +268,7 @@ export function GameProvider({ children }) {
       transferHost,
       updateSettings,
       submitWords,
+      leaveRoom,
       clearError,
     }}>
       {children}

@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useGame } from '../context/GameContext.jsx';
 import PlayerList from './PlayerList.jsx';
 import Scoreboard from './Scoreboard.jsx';
-import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon, PlayIcon, EyeSlashIcon, PencilSquareIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon, PlayIcon, EyeSlashIcon, PencilSquareIcon, BookOpenIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 
 export default function Lobby() {
   const {
-    roomCode, isHost, startGame, players,
+    roomCode, isHost, startGame, players, leaveRoom,
     hideCategory, customWordsEnabled, includeDefaultWords, requiredWordsPerPlayer,
     updateSettings,
   } = useGame();
@@ -184,6 +184,14 @@ export default function Lobby() {
       ) : (
         <p className="text-center text-text-dim italic p-4 animate-pulse">Waiting for host to start...</p>
       )}
+
+      <button
+        onClick={leaveRoom}
+        className="btn-hover w-full border border-surface-2 bg-transparent rounded-xl py-2.5 px-6 text-sm text-text-dim cursor-pointer flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-colors duration-200"
+      >
+        <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
+        Leave Room
+      </button>
     </div>
   );
 }

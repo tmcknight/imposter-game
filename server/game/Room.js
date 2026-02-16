@@ -60,6 +60,7 @@ export default class Room {
     // In lobby, fully remove disconnected players
     if (this.phase === 'LOBBY') {
       this.players.splice(idx, 1);
+      delete this.scores[id];
     }
 
     return this.connectedPlayers.length === 0;
