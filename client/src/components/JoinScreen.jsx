@@ -1,20 +1,27 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext.jsx';
 import { PlusIcon, ArrowRightOnRectangleIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import AvatarPicker from './AvatarPicker.jsx';
+import { AVATAR_COLORS } from '../avatarConstants.js';
+
+function randomColor() {
+  return AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)].id;
+}
 
 export default function JoinScreen() {
   const { createRoom, joinRoom } = useGame();
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [mode, setMode] = useState(null);
+  const [avatar, setAvatar] = useState({ icon: null, color: randomColor() });
 
   const handleCreate = () => {
-    if (name.trim()) createRoom(name.trim());
+    if (name.trim()) createRoom(name.trim(), avatar);
   };
 
   const handleJoin = (e) => {
     e.preventDefault();
-    if (name.trim() && code.trim()) joinRoom(code.trim().toUpperCase(), name.trim());
+    if (name.trim() && code.trim()) joinRoom(code.trim().toUpperCase(), name.trim(), avatar);
   };
 
   if (!mode) {
@@ -32,6 +39,9 @@ export default function JoinScreen() {
           autoFocus
           className="w-full py-3.5 px-4 border-2 border-surface-2 rounded-xl bg-surface text-text text-lg outline-none transition-all duration-200 focus:border-accent focus:glow-accent placeholder:text-text-dim/50"
         />
+        {name.trim() && (
+          <AvatarPicker name={name} avatar={avatar} onChange={setAvatar} />
+        )}
         <div className="flex flex-col gap-3 mt-2">
           <button
             onClick={() => name.trim() && handleCreate()}

@@ -19,9 +19,9 @@ class RoomManager {
     return code;
   }
 
-  createRoom(hostId, hostName) {
+  createRoom(hostId, hostName, hostAvatar) {
     const code = this.generateCode();
-    const room = new Room(code, hostId, hostName);
+    const room = new Room(code, hostId, hostName, hostAvatar);
     this.rooms.set(code, room);
     return room;
   }
