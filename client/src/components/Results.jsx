@@ -78,9 +78,15 @@ export default function Results() {
 
       {isHost ? (
         <div className="flex flex-col gap-2.5 mt-2 animate-fade-in-up stagger-6">
+          {results.allCustomWordsUsed && (
+            <p className="text-center text-amber-400 text-sm font-medium py-2">All custom words have been used!</p>
+          )}
           <button
             onClick={playAgain}
-            className="btn-hover w-full bg-accent text-white border-none rounded-xl py-3.5 px-6 text-lg font-semibold cursor-pointer flex items-center justify-center gap-2 glow-accent"
+            disabled={results.allCustomWordsUsed}
+            className={`btn-hover w-full bg-accent text-white border-none rounded-xl py-3.5 px-6 text-lg font-semibold flex items-center justify-center gap-2 glow-accent ${
+              results.allCustomWordsUsed ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            }`}
           >
             <ArrowPathIcon className="w-5 h-5" />
             Play Again
@@ -94,7 +100,12 @@ export default function Results() {
           </button>
         </div>
       ) : (
-        <p className="text-center text-text-dim italic p-4 animate-pulse">Waiting for host to decide...</p>
+        <div className="animate-fade-in-up stagger-6">
+          {results.allCustomWordsUsed && (
+            <p className="text-center text-amber-400 text-sm font-medium py-2">All custom words have been used!</p>
+          )}
+          <p className="text-center text-text-dim italic p-4 animate-pulse">Waiting for host to decide...</p>
+        </div>
       )}
     </div>
   );

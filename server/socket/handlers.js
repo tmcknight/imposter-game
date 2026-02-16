@@ -173,6 +173,7 @@ export default function registerHandlers(io, socket) {
           ...results,
           imposterName: imposterPlayer?.name,
           imposterAvatar: imposterPlayer?.avatar || null,
+          allCustomWordsUsed: room.allCustomWordsUsed,
           players: room.getPlayerInfo(),
           voteSummary: Object.entries(results.votes).map(([voterId, targetId]) => {
             const voterPlayer = room.players.find(p => p.id === voterId);
