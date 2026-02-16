@@ -8,14 +8,10 @@ A real-time multiplayer social deduction party game. One player is secretly the 
 
 1. One player **creates a room** and shares the 4-character room code.
 2. Other players **join** using the code (3–12 players).
-3. A secret word and category are revealed — except to the imposter, who only sees that they're the imposter.
+3. A secret word is revealed — except to the imposter, who only sees that they're the imposter.
 4. Players take turns giving **one-word hints** out loud over two rounds. The imposter has to fake it.
 5. Everyone **votes** on who they think the imposter is.
 6. If the group catches the imposter, they win. If there's a tie or the wrong person is accused, the imposter wins.
-
-### Host Settings
-
-- **Hide category from imposter** — When enabled, the imposter won't see the word category, making it harder to blend in.
 
 ## Tech Stack
 
@@ -98,9 +94,9 @@ imposter-game/
 └── LICENSE
 ```
 
-## Word Categories
+## Word List
 
-Animals, Food, Places, Movies, Occupations, Sports — each with 15 words.
+90 words across Animals, Food, Places, Movies, Occupations, and Sports.
 
 ## Acknowledgments
 

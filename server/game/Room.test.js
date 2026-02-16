@@ -3,10 +3,10 @@ import Room from './Room.js';
 
 // Mock getRandomWord and getAllDefaultWords
 vi.mock('./words.js', () => ({
-  getRandomWord: vi.fn(() => ({ category: 'animals', word: 'Elephant' })),
+  getRandomWord: vi.fn(() => ({ word: 'Elephant' })),
   getAllDefaultWords: vi.fn(() => [
-    { word: 'Elephant', category: 'animals', submittedBy: null, submittedByName: null },
-    { word: 'Pizza', category: 'food', submittedBy: null, submittedByName: null },
+    { word: 'Elephant', submittedBy: null, submittedByName: null },
+    { word: 'Pizza', submittedBy: null, submittedByName: null },
   ]),
 }));
 
@@ -25,10 +25,8 @@ describe('Room', () => {
       expect(room.players).toHaveLength(1);
       expect(room.players[0]).toEqual({ id: 'host-1', name: 'Alice', connected: true, avatar: null });
       expect(room.word).toBeNull();
-      expect(room.category).toBeNull();
       expect(room.imposterId).toBeNull();
       expect(room.votes).toEqual({});
-      expect(room.hideCategory).toBe(false);
       expect(room.customWordsEnabled).toBe(false);
       expect(room.includeDefaultWords).toBe(false);
       expect(room.requiredWordsPerPlayer).toBe(2);
@@ -159,10 +157,9 @@ describe('Room', () => {
       expect(() => smallRoom.startGame()).toThrow('Need at least 3 players');
     });
 
-    it('sets word, category, imposterId, and phase', () => {
+    it('sets word, imposterId, and phase', () => {
       room.startGame();
       expect(room.word).toBe('Elephant');
-      expect(room.category).toBe('animals');
       expect(room.imposterId).toBeTruthy();
       expect(room.phase).toBe('WORD_REVEAL');
       expect(room.votes).toEqual({});
@@ -327,14 +324,13 @@ describe('Room', () => {
       expect(results.accused).toEqual(['p2']);
     });
 
-    it('includes word and category in results', () => {
+    it('includes word in results', () => {
       room.castVote('host-1', 'p3');
       room.castVote('p2', 'p3');
       room.castVote('p3', 'host-1');
 
       const results = room.tallyVotes();
       expect(results.word).toBe('Elephant');
-      expect(results.category).toBe('animals');
     });
   });
 
@@ -502,7 +498,6 @@ describe('Room', () => {
       room.returnToLobby();
       expect(room.phase).toBe('LOBBY');
       expect(room.word).toBeNull();
-      expect(room.category).toBeNull();
       expect(room.imposterId).toBeNull();
       expect(room.votes).toEqual({});
     });
@@ -590,7 +585,6 @@ describe('Room', () => {
         expect(room.customWordPool).toHaveLength(2);
         expect(room.customWordPool[0]).toEqual({
           word: 'Banana',
-          category: 'Custom',
           submittedBy: 'host-1',
           submittedByName: 'Alice',
         });

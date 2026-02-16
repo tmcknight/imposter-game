@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 // We need to import a fresh RoomManager for each test since it's a singleton
 // Re-mock the module to get fresh instances
 vi.mock('./words.js', () => ({
-  getRandomWord: vi.fn(() => ({ category: 'animals', word: 'Elephant' })),
+  getRandomWord: vi.fn(() => ({ word: 'Elephant' })),
 }));
 
 // Import the module - it exports a singleton, so we'll work with it directly

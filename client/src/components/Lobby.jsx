@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useGame } from '../context/GameContext.jsx';
 import PlayerList from './PlayerList.jsx';
 import Scoreboard from './Scoreboard.jsx';
-import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon, PlayIcon, EyeSlashIcon, PencilSquareIcon, BookOpenIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
+import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon, PlayIcon, PencilSquareIcon, BookOpenIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 
 export default function Lobby() {
   const {
     roomCode, isHost, startGame, players, leaveRoom,
-    hideCategory, customWordsEnabled, includeDefaultWords, requiredWordsPerPlayer,
+    customWordsEnabled, includeDefaultWords, requiredWordsPerPlayer,
     updateSettings,
   } = useGame();
   const canStart = players.filter(p => p.connected).length >= 3;
@@ -54,31 +54,8 @@ export default function Lobby() {
         <div className="bg-surface rounded-xl p-4 glow-surface animate-fade-in">
           <h3 className="text-xs uppercase tracking-widest text-text-dim mb-3">Settings</h3>
 
-          {/* Hide category toggle */}
-          <label className="flex items-center justify-between gap-3 cursor-pointer">
-            <div className="flex items-center gap-2">
-              <EyeSlashIcon className="w-4 h-4 text-text-dim" />
-              <span className="text-sm">Hide category from imposter</span>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={hideCategory}
-              onClick={() => updateSettings({ hideCategory: !hideCategory })}
-              className={`relative w-10 h-6 rounded-full transition-colors duration-200 ${
-                hideCategory ? 'bg-accent' : 'bg-surface-2'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200 ${
-                  hideCategory ? 'translate-x-4' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </label>
-
           {/* Custom words toggle */}
-          <label className="flex items-center justify-between gap-3 cursor-pointer mt-3">
+          <label className="flex items-center justify-between gap-3 cursor-pointer">
             <div className="flex items-center gap-2">
               <PencilSquareIcon className="w-4 h-4 text-text-dim" />
               <span className="text-sm">Custom word submissions</span>
@@ -151,20 +128,12 @@ export default function Lobby() {
       )}
 
       {/* Non-host sees settings as read-only */}
-      {!isHost && (hideCategory || customWordsEnabled) && (
+      {!isHost && customWordsEnabled && (
         <div className="flex flex-col gap-1.5 px-1">
-          {hideCategory && (
-            <div className="flex items-center gap-2 text-sm text-text-dim">
-              <EyeSlashIcon className="w-4 h-4" />
-              <span>Category hidden from imposter</span>
-            </div>
-          )}
-          {customWordsEnabled && (
-            <div className="flex items-center gap-2 text-sm text-text-dim">
-              <PencilSquareIcon className="w-4 h-4" />
-              <span>Custom words enabled ({requiredWordsPerPlayer} per player{includeDefaultWords ? ' + defaults' : ''})</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-sm text-text-dim">
+            <PencilSquareIcon className="w-4 h-4" />
+            <span>Custom words enabled ({requiredWordsPerPlayer} per player{includeDefaultWords ? ' + defaults' : ''})</span>
+          </div>
         </div>
       )}
 

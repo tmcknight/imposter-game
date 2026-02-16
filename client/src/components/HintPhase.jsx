@@ -3,7 +3,7 @@ import PlayerList from './PlayerList.jsx';
 import { LightBulbIcon, ChatBubbleLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 
 export default function HintPhase() {
-  const { word, isImposter, isHost, advancePhase, category } = useGame();
+  const { word, isImposter, isHost, advancePhase } = useGame();
 
   return (
     <div className="flex flex-col gap-4 animate-fade-in">
@@ -12,11 +12,6 @@ export default function HintPhase() {
           <LightBulbIcon className="w-6 h-6 text-accent" />
           Hints
         </h2>
-        {category && (
-          <p className="text-sm text-text-dim mt-1 uppercase tracking-widest">
-            Category: <strong className="text-text">{category}</strong>
-          </p>
-        )}
       </div>
 
       <div className={`text-center p-4 rounded-xl card-shimmer ${isImposter ? 'bg-accent/10 border border-accent/20' : 'bg-accent-green/10 border border-accent-green/20'}`}>

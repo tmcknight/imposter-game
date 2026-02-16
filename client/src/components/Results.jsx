@@ -43,7 +43,6 @@ export default function Results() {
         <div className="bg-surface rounded-xl p-4 text-center glow-surface">
           <span className="block text-xs text-text-dim uppercase tracking-widest mb-1">The Word</span>
           <span className="text-lg font-bold text-accent-green">{results.word}</span>
-          <span className="block text-xs text-text-dim mt-0.5">{results.category}</span>
           {results.wordSubmittedBy && (
             <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent mt-1.5">
               <PencilSquareIcon className="w-3 h-3" />
