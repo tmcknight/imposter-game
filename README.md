@@ -2,6 +2,8 @@
 
 A real-time multiplayer social deduction party game. One player is secretly the **imposter** and doesn't know the secret word — everyone else gives one-word hints to figure out who's bluffing.
 
+![lobby screenshot](image.png)
+
 ## How to Play
 
 1. One player **creates a room** and shares the 4-character room code.
